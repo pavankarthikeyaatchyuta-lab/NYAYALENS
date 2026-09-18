@@ -7,7 +7,7 @@ import { Loader2, FileText } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ChatPage() {
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedDocId, setSelectedDocId] = useState<string>('');
   const [loading, setLoading] = useState(true);
 

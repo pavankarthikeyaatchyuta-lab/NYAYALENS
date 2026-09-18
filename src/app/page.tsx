@@ -35,7 +35,7 @@ export default function LandingPage() {
                     Legal AI Assistant
                   </Badge>
                   <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl xl:text-6xl/none">
-                    Legal documents shouldn't require a law degree to understand.
+                    Legal documents shouldn&apos;t require a law degree to understand.
                   </h1>
                   <p className="max-w-[600px] text-slate-400 text-lg md:text-xl">
                     NyayaLens uses advanced AI to help you understand, identify attention areas, compare versions, and prepare actions for any legal document in minutes.

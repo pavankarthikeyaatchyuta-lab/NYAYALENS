@@ -2,10 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { DocumentAnalysis, Clause } from '@/types';
-import { DISCLAIMER } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { MessageSquare, Send, Bot, User, Sparkles, X, ShieldAlert } from 'lucide-react';
 
@@ -66,7 +64,6 @@ export function ChatPanel({
     setIsLoading(true);
 
     const assistantMessageId = crypto.randomUUID();
-    let assistantContent = '';
 
     try {
       const response = await fetch('/api/chat', {
@@ -105,33 +102,32 @@ export function ChatPanel({
         { id: assistantMessageId, role: 'assistant', content: '' },
       ]);
 
+      let accumulated = '';
+
       while (!done) {
         const { value, done: readerDone } = await reader.read();
         done = readerDone;
         if (value) {
           const chunk = decoder.decode(value, { stream: true });
-          
-          // If response uses Vercel AI data stream protocol (0:"text"\n)
-          // parse out text content or handle raw stream
           const lines = chunk.split('\n');
+          let chunkText = '';
           for (const line of lines) {
             if (line.startsWith('0:')) {
               try {
-                const parsed = JSON.parse(line.slice(2));
-                assistantContent += parsed;
+                chunkText += JSON.parse(line.slice(2));
               } catch {
-                assistantContent += line.slice(2);
+                chunkText += line.slice(2);
               }
             } else if (line.trim().length > 0 && !line.startsWith('d:') && !line.startsWith('e:')) {
-              // Raw chunk fallback
-              assistantContent += line;
+              chunkText += line;
             }
           }
-
+          accumulated += chunkText;
+          const currentText = accumulated;
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === assistantMessageId
-                ? { ...msg, content: assistantContent }
+                ? { ...msg, content: currentText }
                 : msg
             )
           );
@@ -139,7 +135,7 @@ export function ChatPanel({
       }
 
       // If stream ended empty, populate grounded document intelligence
-      if (!assistantContent.trim()) {
+      if (!accumulated.trim()) {
         let fallbackText = '';
         if (selectedClause) {
           fallbackText = `**Clause Focus: ${selectedClause.title} (${selectedClause.section}, Page ${selectedClause.page})**\n\n` +
@@ -165,14 +161,15 @@ export function ChatPanel({
           )
         );
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Chat error:', err);
+      const errMsg = err instanceof Error ? err.message : 'Please verify your API key and connection.';
       setMessages((prev) => [
         ...prev.filter((m) => m.id !== assistantMessageId),
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          content: `I encountered an issue processing your request: ${err.message || 'Please verify your API key and connection.'}. Consider reviewing the highlighted sections directly.`,
+          content: `I encountered an issue processing your request: ${errMsg}. Consider reviewing the highlighted sections directly.`,
         },
       ]);
     } finally {
@@ -274,7 +271,7 @@ export function ChatPanel({
                     onClick={() => handleSuggestedPrompt(prompt)}
                     className="text-left px-3 py-2 text-xs bg-slate-50 hover:bg-indigo-50 dark:bg-slate-900 dark:hover:bg-indigo-950/40 text-slate-700 dark:text-slate-300 hover:text-indigo-700 dark:hover:text-indigo-300 rounded-lg border border-slate-200 dark:border-slate-800 transition-colors"
                   >
-                    "{prompt}"
+                    &ldquo;{prompt}&rdquo;
                   </button>
                 ))}
               </div>

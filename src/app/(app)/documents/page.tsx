@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, CheckCircle, Clock, Loader2, AlertCircle, ArrowRight, ShieldAlert } from 'lucide-react';
+import { Upload, FileText, CheckCircle, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 import { MAX_FILE_SIZE, SUPPORTED_EXTENSIONS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -19,43 +19,42 @@ interface DocItem {
   pageCount: number;
   status: string;
   createdAt: string;
-  highAttentionCount: number;
-  totalAttentionCount: number;
+  analyzedAt?: string;
+  totalAttentionCount?: number;
+  highAttentionCount?: number;
 }
 
 export default function DocumentsPage() {
   const router = useRouter();
+  const [documents, setDocuments] = useState<DocItem[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [processingStage, setProcessingStage] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [statusMessage, setStatusMessage] = useState('Analyzing your document...');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [documents, setDocuments] = useState<DocItem[]>([]);
+  const [processingStage, setProcessingStage] = useState(0);
+  const [statusMessage, setStatusMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const stages = [
-    'Reading document',
-    'Identifying sections',
-    'Finding important clauses',
+    'Parsing document',
+    'Extracting clauses',
+    'Simplifying legal language',
     'Extracting obligations',
     'Finding dates',
     'Preparing AI analysis'
   ];
 
-  const fetchDocuments = async () => {
-    try {
-      const res = await fetch('/api/documents');
-      if (res.ok) {
-        const data = await res.json();
-        setDocuments(data);
-      }
-    } catch (err) {
-      console.error('Failed to load documents', err);
-    }
-  };
-
   useEffect(() => {
-    fetchDocuments();
+    let isMounted = true;
+    fetch('/api/documents')
+      .then(res => (res.ok ? res.json() : []))
+      .then(data => {
+        if (isMounted) setDocuments(data);
+      })
+      .catch(err => console.error('Failed to load documents', err));
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -84,7 +83,7 @@ export default function DocumentsPage() {
   };
 
   const processFile = async (file: File) => {
-    setErrorMessage(null);
+    setErrorMessage('');
 
     if (file.size > MAX_FILE_SIZE) {
       setErrorMessage('File exceeds the 10MB limit. Please upload a smaller document.');
@@ -147,9 +146,10 @@ export default function DocumentsPage() {
       
       await new Promise(r => setTimeout(r, 600));
       router.push(`/documents/${uploadedDoc.id}`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Processing error:', err);
-      setErrorMessage(err.message || 'An unexpected error occurred during processing.');
+      const msg = err instanceof Error ? err.message : 'An unexpected error occurred during processing.';
+      setErrorMessage(msg);
       setIsProcessing(false);
     }
   };
@@ -333,7 +333,7 @@ export default function DocumentsPage() {
                         {doc.pageCount} {doc.pageCount === 1 ? 'page' : 'pages'} · {doc.fileType.toUpperCase()}
                       </p>
                     </div>
-                    {doc.totalAttentionCount > 0 && (
+                    {Boolean(doc.totalAttentionCount && doc.totalAttentionCount > 0) && (
                       <div className="flex items-center gap-2 pt-1 text-xs">
                         <span className="text-red-600 dark:text-red-400 font-medium">
                           {doc.highAttentionCount} high attention

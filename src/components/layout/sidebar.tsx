@@ -20,7 +20,7 @@ const iconMap: Record<string, React.ElementType> = {
   Settings,
 };
 
-export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
+export function Sidebar({ collapsed = false }: SidebarProps) {
   const pathname = usePathname();
 
   return (

@@ -1,11 +1,9 @@
 // Intelligent fallback legal document analyzer
 // Used when Gemini API key has quota/permission denial to ensure zero demo downtime
 
-import type { DocumentAnalysis, Clause, Obligation, ImportantDate, AttentionArea, ActionItems, ComparisonResult } from '@/types';
+import type { DocumentAnalysis, Clause, Obligation, ImportantDate, AttentionArea } from '@/types';
 
 export function fallbackAnalyzeDocument(documentText: string, pageTexts: { pageNumber: number; text: string }[]): DocumentAnalysis {
-  const lines = documentText.split('\n').map(l => l.trim()).filter(Boolean);
-  
   // Extract document type
   let documentType = 'Legal Agreement';
   const lowerText = documentText.toLowerCase();

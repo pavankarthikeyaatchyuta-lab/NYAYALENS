@@ -1,12 +1,26 @@
 import { NextResponse } from 'next/server';
 import { documentStore } from '@/lib/store';
 import { compareDocuments } from '@/lib/ai/compare';
+import { checkRateLimit, getClientIp } from '@/lib/security/rate-limiter';
 
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
+  const clientIp = getClientIp(request);
+  const rateCheck = checkRateLimit(`compare:${clientIp}`, { limit: 20, windowMs: 60000 });
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded. Please wait before running another comparison.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': Math.ceil(rateCheck.resetMs / 1000).toString() },
+      }
+    );
+  }
+
   try {
-    const { documentAId, documentBId } = await request.json();
+    const body = await request.json();
+    const { documentAId, documentBId } = body;
 
     if (!documentAId || !documentBId) {
       return NextResponse.json({ error: 'Both document IDs are required' }, { status: 400 });
@@ -33,8 +47,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json(comparison);
   } catch (error) {
-    console.error('Comparison error:', error);
-    const message = error instanceof Error ? error.message : 'Failed to compare documents';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Comparison error:', error instanceof Error ? error.message : 'Unknown');
+    return NextResponse.json(
+      { error: 'Failed to compare documents. Please try again.' },
+      { status: 500 }
+    );
   }
 }

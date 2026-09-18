@@ -3,6 +3,8 @@ import { demoText, demoAnalysis, demoActions, getDemoDocument, getDemoAnalysis }
 
 describe('Demo Dataset and Fallback Integrity', () => {
   it('should provide complete demo document structure', () => {
+    expect(demoText).toBeDefined();
+    expect(demoAnalysis).toBeDefined();
     const doc = getDemoDocument();
     expect(doc).toBeDefined();
     expect(doc.id).toBe('demo-doc-1');

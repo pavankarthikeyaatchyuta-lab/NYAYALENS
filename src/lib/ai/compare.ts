@@ -27,8 +27,9 @@ export async function compareDocuments(
     });
 
     return object as ComparisonResult;
-  } catch (err: any) {
-    console.warn('Gemini compare error, generating comparative analysis:', err.message);
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+    console.warn('Gemini compare error, generating comparative analysis:', errorMsg);
 
     const changes: ComparisonResult['changes'] = [
       {

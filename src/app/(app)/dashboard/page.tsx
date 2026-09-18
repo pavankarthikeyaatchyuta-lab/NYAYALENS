@@ -7,16 +7,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
 export default function DashboardPage() {
-  const [greeting, setGreeting] = useState('Good day');
+  const [greeting] = useState(getGreeting);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Good morning');
-    else if (hour < 18) setGreeting('Good afternoon');
-    else setGreeting('Good evening');
-    
     // Simulate initial data fetch
     const timer = setTimeout(() => setLoading(false), 500);
     return () => clearTimeout(timer);

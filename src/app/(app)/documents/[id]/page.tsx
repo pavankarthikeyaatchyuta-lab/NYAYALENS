@@ -12,10 +12,6 @@ import {
   AlertTriangle,
   Users,
   BookOpen,
-  Calendar,
-  CheckCircle2,
-  HelpCircle,
-  Sparkles,
   ArrowRight
 } from 'lucide-react';
 import Link from 'next/link';

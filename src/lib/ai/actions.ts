@@ -44,8 +44,9 @@ export async function generateActions(
     });
 
     return object as ActionItems;
-  } catch (err: any) {
-    console.warn('Gemini generateActions error, creating action outputs from analysis:', err.message);
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+    console.warn('Gemini generateActions error, creating action outputs from analysis:', errorMsg);
 
     const checklist = analysis.clauses.map((c, i) => ({
       id: `chk-gen-${i}`,

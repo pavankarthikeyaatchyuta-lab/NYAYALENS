@@ -57,7 +57,7 @@ export default function DateTimeline({ dates }: DateTimelineProps) {
                 <div>
                   <div className="text-sm font-medium text-slate-800 dark:text-slate-200">{date.label}</div>
                   {date.sourceText && (
-                    <p className="text-xs text-slate-500 mt-1 italic">"{date.sourceText}" {date.page ? `(Page ${date.page})` : ''}</p>
+                    <p className="text-xs text-slate-500 mt-1 italic">&ldquo;{date.sourceText}&rdquo; {date.page ? `(Page ${date.page})` : ''}</p>
                   )}
                 </div>
 

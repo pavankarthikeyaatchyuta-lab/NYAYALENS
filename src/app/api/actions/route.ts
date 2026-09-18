@@ -1,15 +1,29 @@
 import { NextResponse } from 'next/server';
 import { documentStore } from '@/lib/store';
 import { generateActions } from '@/lib/ai/actions';
+import { checkRateLimit, getClientIp } from '@/lib/security/rate-limiter';
 
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
-  try {
-    const { documentId } = await request.json();
+  const clientIp = getClientIp(request);
+  const rateCheck = checkRateLimit(`actions:${clientIp}`, { limit: 25, windowMs: 60000 });
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded. Please wait before generating actions again.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': Math.ceil(rateCheck.resetMs / 1000).toString() },
+      }
+    );
+  }
 
-    if (!documentId) {
-      return NextResponse.json({ error: 'Document ID is required' }, { status: 400 });
+  try {
+    const body = await request.json();
+    const { documentId } = body;
+
+    if (!documentId || typeof documentId !== 'string') {
+      return NextResponse.json({ error: 'Valid Document ID is required' }, { status: 400 });
     }
 
     const doc = documentStore.getDocument(documentId);
@@ -18,18 +32,18 @@ export async function POST(request: Request) {
     }
     
     if (!doc.analysis) {
-        return NextResponse.json({ error: 'Document not analyzed yet' }, { status: 400 });
+      return NextResponse.json({ error: 'Document not analyzed yet' }, { status: 400 });
     }
 
     const actions = await generateActions(doc.name, doc.analysis);
     
     documentStore.updateDocument(documentId, {
-      actions
+      actions,
     });
 
     return NextResponse.json(actions);
   } catch (error) {
-    console.error('Actions error:', error);
-    return NextResponse.json({ error: 'Failed to generate actions' }, { status: 500 });
+    console.error('Actions generation error:', error instanceof Error ? error.message : 'Unknown');
+    return NextResponse.json({ error: 'Failed to generate actionable outputs. Please try again.' }, { status: 500 });
   }
 }

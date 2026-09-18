@@ -4,7 +4,6 @@ import {
   ComparisonResultSchema,
   ClauseSchema,
   ObligationSchema,
-  AttentionAreaSchema,
 } from '../src/lib/ai/schemas';
 
 describe('Zod AI Schemas', () => {

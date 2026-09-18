@@ -1,22 +1,21 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
 import { GitCompare, ArrowRight, Plus, Minus, RefreshCw, AlertTriangle } from 'lucide-react';
 import { ComparisonResult } from '@/types';
 import { ATTENTION_LEVEL_COLORS } from '@/lib/constants';
 
 export default function ComparePage() {
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<Array<{ id: string; name: string }>>([]);
   const [docAId, setDocAId] = useState<string>('');
   const [docBId, setDocBId] = useState<string>('');
-  const [loading, setLoading] = useState(false);
   const [fetchingDocs, setFetchingDocs] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ComparisonResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,8 +58,9 @@ export default function ComparePage() {
       
       const data = await response.json();
       setResult(data);
-    } catch (err: any) {
-      setError(err.message || 'An error occurred during comparison');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'An error occurred during comparison';
+      setError(msg);
     } finally {
       setLoading(false);
     }

@@ -26,8 +26,9 @@ export async function analyzeDocument(
     });
 
     return object as DocumentAnalysis;
-  } catch (err: any) {
-    console.warn('Gemini generateObject encountered an error, activating resilient analysis fallback:', err.message);
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+    console.warn('Gemini generateObject encountered an error, activating resilient analysis fallback:', errorMsg);
     return fallbackAnalyzeDocument(documentText, pageTexts);
   }
 }

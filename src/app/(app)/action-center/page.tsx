@@ -14,10 +14,9 @@ import { ActionItems } from '@/types';
 import { getDemoDocument } from '@/data/demo';
 
 export default function ActionCenterPage() {
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<Array<{ id: string; name: string; status?: string }>>([]);
   const [selectedDocId, setSelectedDocId] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const [fetchingDocs, setFetchingDocs] = useState(true);
   const [actionItems, setActionItems] = useState<ActionItems | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
@@ -39,7 +38,6 @@ export default function ActionCenterPage() {
             setActionItems(demoDoc.actions);
           }
         }
-        setFetchingDocs(false);
       })
       .catch(err => {
         console.error('Failed to fetch documents', err);
@@ -49,7 +47,6 @@ export default function ActionCenterPage() {
         if (demoDoc.actions) {
           setActionItems(demoDoc.actions);
         }
-        setFetchingDocs(false);
       });
   }, []);
 
@@ -82,8 +79,9 @@ export default function ActionCenterPage() {
       const data = await response.json();
       setActionItems(data);
       setCheckedItems({});
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'An error occurred';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -263,7 +261,7 @@ Notice: NyayaLens provides AI-assisted legal preparation. This brief is intended
               <CardHeader>
                 <CardTitle className="text-lg">Recommended Next Steps</CardTitle>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Pragmatic, prioritized measures based on your document's terms.
+                  Pragmatic, prioritized measures based on your document&apos;s terms.
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
