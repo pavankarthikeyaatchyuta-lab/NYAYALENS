@@ -2,7 +2,19 @@
 > **"Understand your rights. Know your next step."**  
 > *Legal documents shouldn't require a law degree to understand.*
 
-Built for **PromptWars: Virtual — AI for Legal Assistance & Access**.
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-nyayalens--seven.vercel.app-blue?style=for-the-badge&logo=vercel)](https://nyayalens-seven.vercel.app/)
+[![Hackathon](https://img.shields.io/badge/PromptWars-AI%20for%20Legal%20Assistance%20%26%20Access-orange?style=for-the-badge)](https://github.com/pavankarthikeyaatchyuta-lab/NYAYALENS)
+[![Gemini](https://img.shields.io/badge/Google%20Gemini-Flash-blueviolet?style=for-the-badge&logo=google)](https://ai.google.dev/)
+[![Supabase](https://img.shields.io/badge/Supabase-Database-emerald?style=for-the-badge&logo=supabase)](https://supabase.com/)
+
+---
+
+### 📌 Short Description
+> **NyayaLens** is a GenAI-powered legal document assistant that helps users understand complex documents, identify important clauses and obligations, compare agreements, ask document-grounded questions, and prepare actionable next steps or questions for a legal professional.
+
+### 🏷️ Topics / Tags
+* **Primary Topics**: `Generative AI`, `LegalTech`, `AI for Legal Assistance`, `Legal Document Analysis`, `AI Chatbot`, `Document Intelligence`
+* **Technical Topics**: `Gemini AI`, `Large Language Models (LLMs)`, `Natural Language Processing (NLP)`, `Retrieval / Context-Grounded AI`, `Structured AI Outputs`, `Next.js`, `Vercel AI SDK`, `Supabase`, `Cloud Deployment`
 
 ---
 
