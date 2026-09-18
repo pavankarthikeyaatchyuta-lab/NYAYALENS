@@ -18,14 +18,17 @@ export default function ActionCenterPage() {
   const [selectedDocId, setSelectedDocId] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [actionItems, setActionItems] = useState<ActionItems | null>(null);
+  const [actionCache, setActionCache] = useState<Record<string, ActionItems>>({});
   const [error, setError] = useState<string | null>(null);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [copiedNotification, setCopiedNotification] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     fetch('/api/documents')
       .then(res => res.json())
       .then(data => {
+        if (!isMounted) return;
         if (data.length > 0) {
           setDocuments(data);
           setSelectedDocId(data[0].id);
@@ -36,28 +39,42 @@ export default function ActionCenterPage() {
           setSelectedDocId(demoDoc.id);
           if (demoDoc.actions) {
             setActionItems(demoDoc.actions);
+            setActionCache(prev => ({ ...prev, [demoDoc.id]: demoDoc.actions! }));
           }
         }
       })
       .catch(err => {
+        if (!isMounted) return;
         console.error('Failed to fetch documents', err);
         const demoDoc = getDemoDocument();
         setDocuments([{ id: demoDoc.id, name: `${demoDoc.name} (Demo)` }]);
         setSelectedDocId(demoDoc.id);
         if (demoDoc.actions) {
           setActionItems(demoDoc.actions);
+          setActionCache(prev => ({ ...prev, [demoDoc.id]: demoDoc.actions! }));
         }
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleGenerate = async () => {
     if (!selectedDocId) return;
     
+    // Check client cache first
+    if (actionCache[selectedDocId]) {
+      setActionItems(actionCache[selectedDocId]);
+      return;
+    }
+
     // Handle demo document directly
     if (selectedDocId === 'demo-doc-1') {
       const demo = getDemoDocument();
       if (demo.actions) {
         setActionItems(demo.actions);
+        setActionCache(prev => ({ ...prev, [selectedDocId]: demo.actions! }));
         return;
       }
     }
@@ -78,6 +95,7 @@ export default function ActionCenterPage() {
       
       const data = await response.json();
       setActionItems(data);
+      setActionCache(prev => ({ ...prev, [selectedDocId]: data }));
       setCheckedItems({});
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'An error occurred';
@@ -199,7 +217,16 @@ Notice: NyayaLens provides AI-assisted legal preparation. This brief is intended
           <div className="flex flex-col md:flex-row items-end gap-4">
             <div className="w-full md:w-1/2 space-y-2">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Target Document</label>
-              <Select value={selectedDocId} onValueChange={(val) => setSelectedDocId(val || '')}>
+              <Select
+                value={selectedDocId}
+                onValueChange={(val) => {
+                  const newId = val || '';
+                  setSelectedDocId(newId);
+                  if (actionCache[newId]) {
+                    setActionItems(actionCache[newId]);
+                  }
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select document" />
                 </SelectTrigger>

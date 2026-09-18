@@ -17,12 +17,15 @@ export default function ComparePage() {
   const [fetchingDocs, setFetchingDocs] = useState(true);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ComparisonResult | null>(null);
+  const [comparisonCache, setComparisonCache] = useState<Record<string, ComparisonResult>>({});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     fetch('/api/documents')
       .then(res => res.json())
       .then(data => {
+        if (!isMounted) return;
         setDocuments(data);
         if (data.length >= 2) {
           setDocAId(data[0].id);
@@ -33,14 +36,30 @@ export default function ComparePage() {
         setFetchingDocs(false);
       })
       .catch(err => {
+        if (!isMounted) return;
         console.error('Failed to fetch documents', err);
         setFetchingDocs(false);
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleCompare = async () => {
     if (!docAId || !docBId) return;
     
+    const cacheKey = `${docAId}:${docBId}`;
+    const reverseKey = `${docBId}:${docAId}`;
+    if (comparisonCache[cacheKey]) {
+      setResult(comparisonCache[cacheKey]);
+      return;
+    }
+    if (comparisonCache[reverseKey]) {
+      setResult(comparisonCache[reverseKey]);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setResult(null);
@@ -58,6 +77,7 @@ export default function ComparePage() {
       
       const data = await response.json();
       setResult(data);
+      setComparisonCache(prev => ({ ...prev, [cacheKey]: data }));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'An error occurred during comparison';
       setError(msg);

@@ -81,21 +81,21 @@ function buildComparisonText(analysis: DocumentAnalysis): string {
 
   if (analysis.clauses.length > 0) {
     parts.push('\nKey Clauses:');
-    analysis.clauses.forEach(c => {
-      parts.push(`- ${c.title} (${c.section}): ${c.originalText.substring(0, 300)}`);
+    analysis.clauses.slice(0, 15).forEach(c => {
+      parts.push(`- ${c.title} (${c.section}): ${c.originalText.substring(0, 250)}`);
     });
   }
 
   if (analysis.obligations.length > 0) {
     parts.push('\nObligations:');
-    analysis.obligations.forEach(o => {
+    analysis.obligations.slice(0, 12).forEach(o => {
       parts.push(`- ${o.responsibleParty}: ${o.description}`);
     });
   }
 
   if (analysis.dates.length > 0) {
     parts.push('\nDates:');
-    analysis.dates.forEach(d => {
+    analysis.dates.slice(0, 10).forEach(d => {
       parts.push(`- ${d.label}: ${d.date}`);
     });
   }

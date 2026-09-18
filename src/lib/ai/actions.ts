@@ -11,18 +11,22 @@ export async function generateActions(
 ): Promise<ActionItems> {
   try {
     const clausesSummary = analysis.clauses
+      .slice(0, 15)
       .map(c => `- ${c.title} (${c.section}, Page ${c.page}) [${c.attentionLevel}]: ${c.originalText.substring(0, 200)}`)
       .join('\n') || 'No key clauses identified.';
 
     const obligationsSummary = analysis.obligations
+      .slice(0, 12)
       .map(o => `- ${o.responsibleParty}: ${o.description} (${o.section}, Page ${o.page})`)
       .join('\n') || 'No obligations extracted.';
 
     const datesSummary = analysis.dates
+      .slice(0, 10)
       .map(d => `- ${d.label}: ${d.date} (Page ${d.page})`)
       .join('\n') || 'No dates extracted.';
 
     const attentionAreasSummary = analysis.attentionAreas
+      .slice(0, 8)
       .map(a => `- ${a.title} [${a.attentionLevel}]: ${a.description}`)
       .join('\n') || 'No attention areas identified.';
 

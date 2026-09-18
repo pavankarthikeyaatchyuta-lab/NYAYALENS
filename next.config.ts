@@ -32,8 +32,11 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  compress: true,
+  reactStrictMode: true,
   serverExternalPackages: ['pdf-parse'],
   experimental: {
+    optimizePackageImports: ['lucide-react'],
     serverActions: {
       bodySizeLimit: '10mb',
     },

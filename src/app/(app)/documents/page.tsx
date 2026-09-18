@@ -83,6 +83,7 @@ export default function DocumentsPage() {
   };
 
   const processFile = async (file: File) => {
+    if (isProcessing) return;
     setErrorMessage('');
 
     if (file.size > MAX_FILE_SIZE) {

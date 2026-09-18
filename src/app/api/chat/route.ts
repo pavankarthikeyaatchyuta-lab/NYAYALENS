@@ -155,38 +155,52 @@ export async function POST(request: Request) {
 
     const analysis = doc.analysis;
 
+    // Filter focused clauses: prioritize selectedClause if provided, else top 8 clauses (Token Efficiency Optimization)
+    let filteredClauses = analysis.clauses;
+    if (selectedClause) {
+      filteredClauses = [
+        selectedClause,
+        ...analysis.clauses.filter(c => c.section !== selectedClause.section).slice(0, 4)
+      ];
+    } else {
+      filteredClauses = analysis.clauses.slice(0, 8);
+    }
+
     // Build focused, token-efficient context instead of sending 100k raw tokens
     const context: ChatContext = {
       documentId: doc.id,
       documentName: doc.name,
       documentSummary: analysis.summary,
       selectedClause: selectedClause || undefined,
-      clauses: analysis.clauses.slice(0, 12).map(c => ({
+      clauses: filteredClauses.map(c => ({
         title: c.title,
         section: c.section,
         page: c.page,
         attentionLevel: c.attentionLevel,
       })),
-      obligations: analysis.obligations.slice(0, 10).map(o => ({
+      obligations: analysis.obligations.slice(0, 6).map(o => ({
         description: o.description,
         responsibleParty: o.responsibleParty,
       })),
-      dates: analysis.dates.slice(0, 8).map(d => ({
+      dates: analysis.dates.slice(0, 5).map(d => ({
         label: d.label,
         date: d.date,
       })),
-      attentionAreas: analysis.attentionAreas.slice(0, 6).map(a => ({
+      attentionAreas: analysis.attentionAreas.slice(0, 4).map(a => ({
         title: a.title,
         attentionLevel: a.attentionLevel,
       })),
     };
+
+    // Token-efficient message window: retain only recent turns (max 8 messages)
+    const recentMessages = messages.slice(-8);
 
     const encoder = new TextEncoder();
     const customStream = new ReadableStream({
       async start(controller) {
         let hasChunks = false;
         try {
-          const result = createChatStream(messages, context, (err) => {
+          const result = createChatStream(recentMessages, context, (err) => {
             console.warn('Gemini stream error handled by callback:', err.message);
           });
           for await (const chunk of result.textStream) {

@@ -40,10 +40,25 @@ export async function POST(request: Request) {
       );
     }
 
+    // Reuse existing comparison result if available and not explicitly requested to regenerate
+    const cachedComp = documentStore.getComparisonByDocs(documentAId, documentBId);
+    if (cachedComp && !body.forceRegenerate) {
+      return NextResponse.json(cachedComp.result);
+    }
+
     const comparison = await compareDocuments(
       { name: docA.name, summary: docA.analysis.summary, analysis: docA.analysis },
       { name: docB.name, summary: docB.analysis.summary, analysis: docB.analysis }
     );
+
+    // Cache the deterministic comparison result
+    documentStore.addComparison({
+      id: crypto.randomUUID(),
+      documentAId,
+      documentBId,
+      result: comparison,
+      createdAt: new Date().toISOString(),
+    });
 
     return NextResponse.json(comparison);
   } catch (error) {

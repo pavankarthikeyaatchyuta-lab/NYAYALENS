@@ -12,9 +12,11 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
     fetch('/api/documents')
       .then(res => res.json())
       .then(data => {
+        if (!isMounted) return;
         setDocuments(data);
         if (data.length > 0) {
           setSelectedDocId(data[0].id);
@@ -22,9 +24,14 @@ export default function ChatPage() {
         setLoading(false);
       })
       .catch(err => {
+        if (!isMounted) return;
         console.error('Failed to fetch documents', err);
         setLoading(false);
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const selectedDoc = documents.find(d => d.id === selectedDocId);

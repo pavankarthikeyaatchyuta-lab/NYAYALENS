@@ -89,6 +89,18 @@ class DocumentStore {
     return this.comparisons.get(id);
   }
 
+  getComparisonByDocs(docAId: string, docBId: string): StoredComparison | undefined {
+    for (const comp of this.comparisons.values()) {
+      if (
+        (comp.documentAId === docAId && comp.documentBId === docBId) ||
+        (comp.documentAId === docBId && comp.documentBId === docAId)
+      ) {
+        return comp;
+      }
+    }
+    return undefined;
+  }
+
   // Chat history
   getChatHistory(documentId: string): { role: string; content: string }[] {
     return this.chatHistory.get(documentId) || [];

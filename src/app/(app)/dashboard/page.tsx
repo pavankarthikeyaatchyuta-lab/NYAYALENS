@@ -2,10 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Upload, GitCompare, MessageSquare, FileText } from 'lucide-react';
+import { Upload, GitCompare, MessageSquare, FileText, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+
+interface RecentDoc {
+  id: string;
+  name: string;
+  documentType: string;
+  fileType: string;
+  pageCount: number;
+  status: string;
+  highAttentionCount?: number;
+  totalAttentionCount?: number;
+}
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -17,11 +29,25 @@ function getGreeting() {
 export default function DashboardPage() {
   const [greeting] = useState(getGreeting);
   const [loading, setLoading] = useState(true);
+  const [recentDocs, setRecentDocs] = useState<RecentDoc[]>([]);
 
   useEffect(() => {
-    // Simulate initial data fetch
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
+    let isMounted = true;
+    fetch('/api/documents')
+      .then(res => (res.ok ? res.json() : []))
+      .then(data => {
+        if (!isMounted) return;
+        setRecentDocs(data.slice(0, 3));
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
@@ -89,6 +115,40 @@ export default function DashboardPage() {
                   </div>
                 </CardContent>
               </Card>
+            ))}
+          </div>
+        ) : recentDocs.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {recentDocs.map((doc) => (
+              <Link key={doc.id} href={`/documents/${doc.id}`} className="group">
+                <Card className="h-full transition-all hover:border-primary/50 hover:shadow-sm">
+                  <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        {doc.documentType || 'Document'}
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className={doc.status === 'analyzed' ? 'text-emerald-600 border-emerald-200' : 'text-amber-600 border-amber-200'}
+                      >
+                        {doc.status}
+                      </Badge>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-sm line-clamp-1 group-hover:text-primary transition-colors">
+                        {doc.name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {doc.pageCount} {doc.pageCount === 1 ? 'page' : 'pages'} · {doc.fileType?.toUpperCase()}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t text-xs text-primary font-medium">
+                      <span>View analysis</span>
+                      <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         ) : (

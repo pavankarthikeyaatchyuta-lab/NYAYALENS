@@ -20,6 +20,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
 
+    // Reuse existing analysis if already analyzed and not explicitly requested to regenerate (Token & Latency Efficiency)
+    if (doc.status === 'analyzed' && doc.analysis && !body.forceRegenerate) {
+      return NextResponse.json(doc.analysis);
+    }
+
     if (!doc.content) {
       return NextResponse.json({ error: 'Document has no text content' }, { status: 400 });
     }

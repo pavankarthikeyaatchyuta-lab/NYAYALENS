@@ -16,14 +16,20 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { getDemoDocument, getDemoAnalysis } from '@/data/demo';
+import dynamic from 'next/dynamic';
 import type { DocumentAnalysis, Clause } from '@/types';
 import type { StoredDocument } from '@/lib/store';
 import AttentionOverview from '@/components/analysis/attention-overview';
 import ClauseCard from '@/components/analysis/clause-card';
-import ClauseDetailSheet from '@/components/analysis/clause-detail-sheet';
 import ObligationsList from '@/components/analysis/obligations-list';
-import DateTimeline from '@/components/analysis/date-timeline';
 import { ChatPanel } from '@/components/chat/chat-panel';
+
+const ClauseDetailSheet = dynamic(() => import('@/components/analysis/clause-detail-sheet'), {
+  ssr: false,
+});
+const DateTimeline = dynamic(() => import('@/components/analysis/date-timeline'), {
+  loading: () => <Skeleton className="h-64 w-full" />,
+});
 
 export default function DocumentAnalysisPage() {
   const params = useParams();
@@ -36,20 +42,24 @@ export default function DocumentAnalysisPage() {
   const [detailClause, setDetailClause] = useState<Clause | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     async function loadData() {
       setLoading(true);
 
       // Check if it's the demo document or test ID
       if (id === 'demo' || id === 'demo-doc-1') {
         const demoDoc = getDemoDocument();
-        setDocument(demoDoc);
-        setAnalysis(demoDoc.analysis || getDemoAnalysis());
-        setLoading(false);
+        if (isMounted) {
+          setDocument(demoDoc);
+          setAnalysis(demoDoc.analysis || getDemoAnalysis());
+          setLoading(false);
+        }
         return;
       }
 
       try {
         const res = await fetch(`/api/documents/${id}`);
+        if (!isMounted) return;
         if (res.ok) {
           const doc = await res.json();
           setDocument(doc);
@@ -63,17 +73,22 @@ export default function DocumentAnalysisPage() {
           setAnalysis(demoDoc.analysis || getDemoAnalysis());
         }
       } catch {
+        if (!isMounted) return;
         const demoDoc = getDemoDocument();
         setDocument(demoDoc);
         setAnalysis(demoDoc.analysis || getDemoAnalysis());
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
 
     if (id) {
       loadData();
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
   if (loading || !document || !analysis) {

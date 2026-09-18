@@ -35,6 +35,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Document not analyzed yet' }, { status: 400 });
     }
 
+    // Reuse existing action items if already generated (Token & Latency Efficiency)
+    if (doc.actions && !body.forceRegenerate) {
+      return NextResponse.json(doc.actions);
+    }
+
     const actions = await generateActions(doc.name, doc.analysis);
     
     documentStore.updateDocument(documentId, {
